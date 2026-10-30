@@ -31,7 +31,7 @@ def buildMissingParameterResponse(parameter_name):
     return buildErrorResponse( f"Missing Parameter: '{parameter_name}'", 404)
 
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder='templates', static_url_path='/static')
 
 
 @app.route("/")
