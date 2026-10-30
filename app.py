@@ -1,13 +1,3 @@
-"""
-Simple website with an interactive map, built with Flask + Leaflet (OpenStreetMap tiles).
-
-Setup:
-    pip install flask
-Run:
-    python app.py
-Then open http://127.0.0.1:5000
-"""
-
 from flask import Flask
 from flask import jsonify
 from flask import request
@@ -76,6 +66,6 @@ def api_v1():
 
 
 
-if "__main__" == __name__:
-    app.run(debug=True)
+# if "__main__" == __name__:
+#     app.run(debug=True)
 
