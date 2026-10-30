@@ -6,8 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <!-- Load Leaflet from CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- Load Esri Leaflet from CDN -->
+<!--     <script src="https://unpkg.com/esri-leaflet@3.0.19/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@4.3.2/dist/esri-leaflet-vector.js"></script> -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +30,6 @@
 
         header { 
             padding: 12px 16px; 
-/*            background: #1f3a5f; */
-/*            color: #fff;*/
             background: gold;
             color: black;
         }
@@ -85,7 +88,6 @@
     <header><strong>Where is the Sun</strong></header>
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
 
 
@@ -158,35 +160,52 @@
 
         function buildBaseLayers() {
             // Configure map layers
+            // https://github.com/alexurquhart/free-tiles/blob/master/tiles.json
             // https://leaflet-extras.github.io/leaflet-providers/preview/
             var OSM = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; OpenStreetMap contributors'
             });
 
-            var Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
-                minZoom: 0,
-                maxZoom: 20,
-                attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                ext: 'png'
-            });
+            // Setup MapBox layers
+            const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoic2pzYWZyYW5layIsImEiOiJTUlpwUkV3In0.bq_MxcpnEk6NWKEv4hiP6g';
+            const STYLE_ID = 'streets-v12'; // e.g., streets-v12, outdoors-v12, light-v11, dark-v11, satellite-v9
 
-            var Esri_WorldTopoMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
-            });           
+            var Mapbox_Streets = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
+                tileSize: 512,
+                zoomOffset: -1,
+                maxZoom: 22,
+                attribution:
+                    '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ' +
+                    '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }
+            );
 
-            var Stadia_AlidadeSatellite = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
-                minZoom: 0,
-                maxZoom: 20,
-                attribution: '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                ext: 'jpg'
-            });
+            var Mapbox_Light = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
+                tileSize: 512,
+                zoomOffset: -1,
+                maxZoom: 22,
+                attribution:
+                    '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ' +
+                    '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }
+            );
+
+            var Mapbox_Dark = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
+                tileSize: 512,
+                zoomOffset: -1,
+                maxZoom: 22,
+                attribution:
+                    '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ' +
+                    '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }
+            );
 
             const baselayers = {
                 'OSM': OSM,
-                'Esri_WorldTopoMap': Esri_WorldTopoMap,
-                'Stadia_AlidadeSmoothDark': Stadia_AlidadeSmoothDark,
-                'Stadia_AlidadeSatellite': Stadia_AlidadeSatellite
+                'Streets': Mapbox_Streets,
+                'Light': Mapbox_Light,
+                'Dark': Mapbox_Dark
             };
 
             return baselayers;
@@ -213,7 +232,7 @@
             // Set baselayer based on time of day
             let hour_of_the_day = new Date().getHours();
             (hour_of_the_day > 8 && hour_of_the_day < 18) ? 
-                baselayers.Esri_WorldTopoMap.addTo(map) : baselayers.Stadia_AlidadeSmoothDark.addTo(map);
+                baselayers.Light.addTo(map) : baselayers.Dark.addTo(map);
 
             // Set markers
             var sunnyCity = L.marker(HELSINKI, { icon: icons.sun });
@@ -255,7 +274,7 @@
         }
 
         init('map');
-        
+
     </script>
 </body>
 </html>
