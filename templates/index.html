@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Where is the Sun?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            font-family: "Comic Relief", system-ui;
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        header { 
+            padding: 12px 16px; 
+/*            background: #1f3a5f; */
+/*            color: #fff;*/
+            background: gold;
+            color: black;
+        }
+
+        #map { 
+            height: calc(100% - 48px); 
+        }
+
+
+        /* 1. Core Pulsing Marker Styles */
+        .gps-marker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* The solid inner blue dot */
+        .gps-dot {
+            width: 14px;
+            height: 14px;
+            background-color: #007bff;
+            border: 2.5px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            position: absolute;
+            z-index: 2;
+        }
+
+        /* The pulsing outer aura */
+        .gps-pulse {
+            width: 35px;
+            height: 35px;
+            background-color: rgba(0, 123, 255, 0.4);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 1;
+            animation: pulse 2s ease-out infinite;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0% {
+                transform: scale(0.3);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- <header><strong>Where is the Sun</strong> &mdash; Click anywhere on the map</header> -->
+    <header><strong>Where is the Sun</strong></header>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+
+
+        class ApiClient {
+            /**
+             * @param {string} baseUrl - The base URL for the API (e.g., 'https://example.com')
+             * @param {Object} [config={}] - Optional configuration defaults
+             */
+            constructor(baseUrl, config = {}) {
+                this.baseUrl = baseUrl.replace(/\/$/, '');
+                this.defaultHeaders = config.headers || {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                };
+                this.authToken = config.authToken || null;
+            }
+
+            generateUniqueId() {
+                return Date.now().toString(36) + Math.random().toString(36).slice(2);
+            }
+
+            buildApiRequest(latlng) {
+                return {
+                    method: 'FindTheSun',
+                    params: {
+                        latitude: latlng.lat,
+                        longitude: latlng.lng
+                    },
+                    id: this.generateUniqueId()
+                };
+            }
+
+            findTheSun(latlng) {
+                let payload = this.buildApiRequest(latlng);
+                return fetch(`${this.baseUrl}/api/v1`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(response => {
+                        if ('ok' == response.status)
+                            return response.data.city;
+                        throw new Error(response.error.message);
+                    });
+            }
+        }
+
+
+
+        var init = function(container_id) {
+            
+            const api = new ApiClient("/");
+
+            const HELSINKI = [60.1708, 24.9375];
+
+            const map = L.map(container_id)
+
+            var baselayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            });
+            map.addLayer(baselayer);
+
+            map.setView(HELSINKI, 9);
+
+
+            // Define a custom sun divIcon
+            var sunIcon = L.divIcon({
+                className: 'custom-sun-icon',
+                html: '<div style="font-size: 24px; color: gold; text-shadow: 0 0 3px rgba(0,0,0,0.5);">☀️</div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+
+            // Define the Custom DivIcon
+            const userLocationIcon = L.divIcon({
+                className: 'gps-marker', // Remove default wrapper styling
+                html: '<div class="gps-pulse"></div><div class="gps-dot"></div>',
+                iconSize: [35, 35],      // Container bounds
+                iconAnchor: [17.5, 17.5] // Center the anchor exactly
+            });
+            var userMarker = L.marker(HELSINKI, { icon: userLocationIcon });
+
+            var userAccuracy = L.circle(HELSINKI, {
+                //radius: e.accuracy/2,
+                color: '#007bff',
+                fillColor: '#007bff',
+                fillOpacity: 0.15,
+                weight: 1
+            });
+
+            var sunnyCity = L.marker(HELSINKI, { icon: sunIcon });
+
+            var featureGroup = L.featureGroup([userMarker, sunnyCity]);
+
+            map.locate({setView: true, watch: true}); /* This will return map so you can do chaining */
+            map.on('locationfound', function(e){
+                    userMarker.setLatLng(e.latlng);
+                    userAccuracy.setLatLng(e.latlng);
+                    userAccuracy.setRadius(e.accuracy/2);
+                    !map.hasLayer(userMarker) && userMarker.addTo(map);
+                    !map.hasLayer(userAccuracy) && userAccuracy.addTo(map);
+                    api.findTheSun(e.latlng)
+                        .then(city => {
+                            sunnyCity.setLatLng([city.latitude, city.longitude]);
+                            !map.hasLayer(sunnyCity) && sunnyCity.addTo(map);
+                            let bounds = featureGroup.getBounds();
+                            map.fitBounds(bounds);
+                        })
+                        .catch((error) => {
+                            console.error("Caught an error:", error.message);
+                        });
+                })
+                .on('locationerror', function(err){
+                    console.log(err);
+                });
+        }
+
+        init('map');
+    </script>
+</body>
+</html>
