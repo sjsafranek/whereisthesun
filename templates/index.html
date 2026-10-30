@@ -136,6 +136,61 @@
             }
         }
 
+        const icons = {
+            // Define a custom sun divIcon
+            sun: L.divIcon({
+                className: 'custom-sun-icon',
+                html: '<div style="font-size: 24px; color: gold; text-shadow: 0 0 3px rgba(0,0,0,0.5);">☀️</div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            }),
+
+            // Define the Custom DivIcon
+            gps: L.divIcon({
+                className: 'gps-marker', // Remove default wrapper styling
+                html: '<div class="gps-pulse"></div><div class="gps-dot"></div>',
+                iconSize: [35, 35],      // Container bounds
+                iconAnchor: [17.5, 17.5] // Center the anchor exactly
+            })
+        }
+
+
+        function buildBaseLayers() {
+            // Configure map layers
+            // https://leaflet-extras.github.io/leaflet-providers/preview/
+            var OSM = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            });
+
+            var Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
+                minZoom: 0,
+                maxZoom: 20,
+                attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                ext: 'png'
+            });
+
+            var Esri_WorldTopoMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+            });           
+
+            var Stadia_AlidadeSatellite = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
+                minZoom: 0,
+                maxZoom: 20,
+                attribution: '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                ext: 'jpg'
+            });
+
+            const baselayers = {
+                'OSM': OSM,
+                'Esri_WorldTopoMap': Esri_WorldTopoMap,
+                'Stadia_AlidadeSmoothDark': Stadia_AlidadeSmoothDark,
+                'Stadia_AlidadeSatellite': Stadia_AlidadeSatellite
+            };
+
+            return baselayers;
+        }
 
 
         var init = function(container_id) {
@@ -144,34 +199,25 @@
 
             const HELSINKI = [60.1708, 24.9375];
 
-            const map = L.map(container_id)
-
-            var baselayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            });
-            map.addLayer(baselayer);
-
-            map.setView(HELSINKI, 9);
-
-
-            // Define a custom sun divIcon
-            var sunIcon = L.divIcon({
-                className: 'custom-sun-icon',
-                html: '<div style="font-size: 24px; color: gold; text-shadow: 0 0 3px rgba(0,0,0,0.5);">☀️</div>',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15],
-                popupAnchor: [0, -15]
+            const map = L.map(container_id, {
+                center: HELSINKI,
+                zoom: 9,
             });
 
-            // Define the Custom DivIcon
-            const userLocationIcon = L.divIcon({
-                className: 'gps-marker', // Remove default wrapper styling
-                html: '<div class="gps-pulse"></div><div class="gps-dot"></div>',
-                iconSize: [35, 35],      // Container bounds
-                iconAnchor: [17.5, 17.5] // Center the anchor exactly
-            });
-            var userMarker = L.marker(HELSINKI, { icon: userLocationIcon });
+            // Setup layer control
+            const baselayers = buildBaseLayers();
+            const overlays = {};
+            var layerControl = L.control.layers(baselayers, overlays)
+            layerControl.addTo(map);
+
+            // Set baselayer based on time of day
+            let hour_of_the_day = new Date().getHours();
+            (hour_of_the_day > 8 && hour_of_the_day < 18) ? 
+                baselayers.Esri_WorldTopoMap.addTo(map) : baselayers.Stadia_AlidadeSmoothDark.addTo(map);
+
+            // Set markers
+            var sunnyCity = L.marker(HELSINKI, { icon: icons.sun });
+            var userMarker = L.marker(HELSINKI, { icon: icons.gps });
 
             var userAccuracy = L.circle(HELSINKI, {
                 //radius: e.accuracy/2,
@@ -181,12 +227,12 @@
                 weight: 1
             });
 
-            var sunnyCity = L.marker(HELSINKI, { icon: sunIcon });
-
             var featureGroup = L.featureGroup([userMarker, sunnyCity]);
 
-            map.locate({setView: true, watch: true}); /* This will return map so you can do chaining */
+            // map.locate({setView: true, watch: true}); /* This will return map so you can do chaining */
+            map.locate({setView: true}); /* This will return map so you can do chaining */
             map.on('locationfound', function(e){
+                    console.log(e);
                     userMarker.setLatLng(e.latlng);
                     userAccuracy.setLatLng(e.latlng);
                     userAccuracy.setRadius(e.accuracy/2);
@@ -209,6 +255,7 @@
         }
 
         init('map');
+        
     </script>
 </body>
 </html>
