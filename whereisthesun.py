@@ -1,7 +1,7 @@
 from geocoder import forward_geocode
 from geocoder import reverse_geocode
 from geodata import fetch_cities
-from geoutils import is_day
+# from geoutils import is_day
 from geoutils import is_daytime
 from geoutils import haversine_km
 from weather import fetch_weather
