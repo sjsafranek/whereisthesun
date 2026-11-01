@@ -23,7 +23,7 @@ if "__main__" == __name__:
     print(result)
     print()
     
-    destination = reverse_geocode(result['city']['latitude'], result['city']['longitude'])
+    destination = reverse_geocode(result['latitude'], result['longitude'])
     print(destination)
     print()
 
