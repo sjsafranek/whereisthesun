@@ -61,7 +61,12 @@ def api_v1():
         longitude = params.get('longitude')
         if not longitude:
             return jsonify(buildMissingParameterResponse('params.longitude')), 404
-        city = find_closest_sunny_city(latitude, longitude)
+
+        # Optional params
+        min_population = params.get('min_population', 50_000)
+        max_cloud_cover = params.get('max_cloud_cover', 30)
+
+        city = find_closest_sunny_city(latitude, longitude, min_population=min_population, max_cloud_cover=max_cloud_cover)
         return jsonify(buildSuccessResponse(city=city)), 200
 
 

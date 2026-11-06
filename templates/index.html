@@ -81,11 +81,41 @@
             }
         }
 
+        /* Utilities */
+        .pull-right {
+            float: right;
+        }
+
+        .clearfix::after {
+            content: "";
+            display: table; /* Or display: block */
+            clear: both;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- Define Icons -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="GitHubIcon" fill="currentColor" viewBox="0 0 16 16" class="bi bi-github">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/>
+        </symbol>
+    </svg>
+
     <!-- <header><strong>Where is the Sun</strong> &mdash; Click anywhere on the map</header> -->
-    <header><strong>Where is the Sun</strong></header>
+    <header>
+        <strong>Where is the Sun</strong>
+        <span class="pull-right">
+            <a href="https://github.com/sjsafranek/whereisthesun" target="_blank" class="nav-link p-2" title="GitHub">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                    <use xlink:href="#GitHubIcon"/>
+                </svg>
+            </a>
+        </span>
+    </header>
+
+
     <div id="map"></div>
 
     <script>
@@ -109,19 +139,22 @@
                 return Date.now().toString(36) + Math.random().toString(36).slice(2);
             }
 
-            buildApiRequest(latlng) {
+            buildApiRequest(latlng, options) {
+                options = options || {}
                 return {
                     method: 'FindTheSun',
                     params: {
                         latitude: latlng.lat,
-                        longitude: latlng.lng
+                        longitude: latlng.lng,
+                        min_population: options.min_population,
+                        max_cloud_cover: options.max_cloud_cover
                     },
                     id: this.generateUniqueId()
                 };
             }
 
-            findTheSun(latlng) {
-                let payload = this.buildApiRequest(latlng);
+            findTheSun(latlng, options) {
+                let payload = this.buildApiRequest(latlng, options);
                 return fetch(`${this.baseUrl}/api/v1`, {
                         method: 'POST',
                         headers: {
@@ -138,7 +171,7 @@
             }
         }
 
-        const icons = {
+        const Icons = {
             // Define a custom sun divIcon
             sun: L.divIcon({
                 className: 'custom-sun-icon',
@@ -157,6 +190,8 @@
             })
         }
 
+        const HELSINKI = [60.1708, 24.9375];
+
 
         function buildBaseLayers() {
             // Configure map layers
@@ -168,10 +203,11 @@
             });
 
             // Setup MapBox layers
-            const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoic2pzYWZyYW5layIsImEiOiJTUlpwUkV3In0.bq_MxcpnEk6NWKEv4hiP6g';
-            const STYLE_ID = 'streets-v12'; // e.g., streets-v12, outdoors-v12, light-v11, dark-v11, satellite-v9
+            //const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoic2pzYWZyYW5layIsImEiOiJTUlpwUkV3In0.bq_MxcpnEk6NWKEv4hiP6g';
+            // e.g., streets-v12, outdoors-v12, light-v11, dark-v11, satellite-v9
 
-            var Mapbox_Streets = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
+            // var Mapbox_Streets = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
+            var Mapbox_Streets = L.tileLayer('https://tiles.thestefanproblem.rocks/api/v1/provider/mapbox_streets/{z}/{x}/{y}.png', {
                 tileSize: 512,
                 zoomOffset: -1,
                 maxZoom: 22,
@@ -181,17 +217,8 @@
                 }
             );
 
-            var Mapbox_Light = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
-                tileSize: 512,
-                zoomOffset: -1,
-                maxZoom: 22,
-                attribution:
-                    '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ' +
-                    '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                }
-            );
-
-            var Mapbox_Dark = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
+            // var Mapbox_Dark = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_ACCESS_TOKEN}`, {
+            var Mapbox_Dark = L.tileLayer('https://tiles.thestefanproblem.rocks/api/v1/provider/mapbox_dark/{z}/{x}/{y}.png', {
                 tileSize: 512,
                 zoomOffset: -1,
                 maxZoom: 22,
@@ -204,7 +231,6 @@
             const baselayers = {
                 'OSM': OSM,
                 'Streets': Mapbox_Streets,
-                'Light': Mapbox_Light,
                 'Dark': Mapbox_Dark
             };
 
@@ -212,65 +238,85 @@
         }
 
 
+
+        class App {
+            constructor(container_id) {
+                let self = this;
+
+                this.api = new ApiClient("/");
+
+                this.map = L.map(container_id, {
+                    center: HELSINKI,
+                    zoom: 9,
+                });
+
+                // Set markers
+                this._layers = {
+                    'sunnyCity': L.marker(HELSINKI, { icon: Icons.sun }),
+                    'userMarker': L.marker(HELSINKI, { icon: Icons.gps }),
+                    'userAccuracy': L.circle(HELSINKI, {
+                        color: '#007bff',
+                        fillColor: '#007bff',
+                        fillOpacity: 0.15,
+                        weight: 1
+                    })
+                };
+                this._layers.userLocationFeatureGroup = L.featureGroup([this._layers.userMarker, this._layers.sunnyCity]);
+
+                this.search_options = {
+                    min_population: 50000,
+                    max_cloud_cover: 30
+                };
+
+                // map.locate({setView: true, watch: true}); /* This will return map so you can do chaining */
+                this.map.locate({setView: true}); /* This will return map so you can do chaining */
+                this.map.on('locationfound', (event) => self._onLocationFound(event) )
+                        .on('locationerror', console.log);
+            }
+
+            _onLocationFound(event) {
+                let self = this;
+                this.setUserLocation(event.latlng, event.accuracy);
+                this.api.findTheSun(event.latlng, self.search_options)
+                    .then(city => self.setSunnyCity(city))
+                    .catch((error) => {
+                        console.error("Caught an error:", error.message);
+                    });
+            }
+
+            setUserLocation(latlng, accuracy) {
+                this._layers.userMarker.setLatLng(latlng);
+                this._layers.userAccuracy.setLatLng(latlng);
+                this._layers.userAccuracy.setRadius(accuracy/2);
+                !this.map.hasLayer(this._layers.userMarker) && this._layers.userMarker.addTo(this.map);
+                !this.map.hasLayer(this._layers.userAccuracy) && this._layers.userAccuracy.addTo(this.map);
+            }
+
+            setSunnyCity(city) {
+                this._layers.sunnyCity.setLatLng([city.latitude, city.longitude]);
+                !this.map.hasLayer(this._layers.sunnyCity) && this._layers.sunnyCity.addTo(this.map);
+                let bounds = this._layers.userLocationFeatureGroup.getBounds();
+                this.map.fitBounds(bounds);
+            }
+        }
+
+
         var init = function(container_id) {
             
-            const api = new ApiClient("/");
-
-            const HELSINKI = [60.1708, 24.9375];
-
-            const map = L.map(container_id, {
-                center: HELSINKI,
-                zoom: 9,
-            });
+            
+            const app = new App(container_id);
 
             // Setup layer control
             const baselayers = buildBaseLayers();
             const overlays = {};
             var layerControl = L.control.layers(baselayers, overlays)
-            layerControl.addTo(map);
+            layerControl.addTo(app.map);
 
             // Set baselayer based on time of day
             let hour_of_the_day = new Date().getHours();
             (hour_of_the_day > 8 && hour_of_the_day < 18) ? 
-                baselayers.Light.addTo(map) : baselayers.Dark.addTo(map);
+                baselayers.Streets.addTo(app.map) : baselayers.Dark.addTo(app.map);
 
-            // Set markers
-            var sunnyCity = L.marker(HELSINKI, { icon: icons.sun });
-            var userMarker = L.marker(HELSINKI, { icon: icons.gps });
-
-            var userAccuracy = L.circle(HELSINKI, {
-                //radius: e.accuracy/2,
-                color: '#007bff',
-                fillColor: '#007bff',
-                fillOpacity: 0.15,
-                weight: 1
-            });
-
-            var featureGroup = L.featureGroup([userMarker, sunnyCity]);
-
-            // map.locate({setView: true, watch: true}); /* This will return map so you can do chaining */
-            map.locate({setView: true}); /* This will return map so you can do chaining */
-            map.on('locationfound', function(e){
-                    console.log(e);
-                    userMarker.setLatLng(e.latlng);
-                    userAccuracy.setLatLng(e.latlng);
-                    userAccuracy.setRadius(e.accuracy/2);
-                    !map.hasLayer(userMarker) && userMarker.addTo(map);
-                    !map.hasLayer(userAccuracy) && userAccuracy.addTo(map);
-                    api.findTheSun(e.latlng)
-                        .then(city => {
-                            sunnyCity.setLatLng([city.latitude, city.longitude]);
-                            !map.hasLayer(sunnyCity) && sunnyCity.addTo(map);
-                            let bounds = featureGroup.getBounds();
-                            map.fitBounds(bounds);
-                        })
-                        .catch((error) => {
-                            console.error("Caught an error:", error.message);
-                        });
-                })
-                .on('locationerror', function(err){
-                    console.log(err);
-                });
         }
 
         init('map');

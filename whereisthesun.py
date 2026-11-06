@@ -12,24 +12,12 @@ def fetch_candidate_cities(lat, lon, when=None, min_population=50_000):
     candidates = []
     cities = fetch_cities()
     for city in cities:
-
-        if 'Bend' == city['name']:
-            print("BEFORE")
-            print(city)
-            print(city["population"], min_population, city["population"] < min_population)
-            # print(not is_day(city["latitude"], city["longitude"], when))
-            print(not is_daytime(city["latitude"], city["longitude"], when=when, verbose=True))
-
         if city["population"] < min_population:
             continue
         if not is_daytime(city["latitude"], city["longitude"], when):
             continue
         city = dict(city, distance_km=haversine_km(lat, lon, city["latitude"], city["longitude"]))
         candidates.append(city)
-
-        if 'Bend' == city['name']:
-            print("AFTER")
-
     candidates.sort(key=lambda city: city["distance_km"])
     return candidates
 
