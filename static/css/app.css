@@ -1,0 +1,41 @@
+/* 1. Core Pulsing Marker Styles */
+.gps-marker {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* The solid inner blue dot */
+.gps-dot {
+    width: 14px;
+    height: 14px;
+    background-color: #007bff;
+    border: 2.5px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    position: absolute;
+    z-index: 2;
+}
+
+/* The pulsing outer aura */
+.gps-pulse {
+    width: 35px;
+    height: 35px;
+    background-color: rgba(0, 123, 255, 0.4);
+    border-radius: 50%;
+    position: absolute;
+    z-index: 1;
+    animation: pulse 2s ease-out infinite;
+}
+
+/* Pulse animation */
+@keyframes pulse {
+    0% {
+        transform: scale(0.3);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}

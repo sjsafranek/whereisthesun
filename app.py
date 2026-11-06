@@ -4,7 +4,6 @@ from flask import request
 from flask import render_template
 from flask import render_template_string
 
-from whereisthesun import find_closest_sunny_city
 from whereisthesun import find_closest_sunny_cities
 
 
@@ -55,21 +54,22 @@ def api_v1():
 
     # Method handlers
     if 'FindTheSun' == method:
+
         # Required parameters
         params = api_request.get('params')
         if not params:
             return jsonify(buildMissingParameterResponse('params')), 404
+        
         latitude = params.get('latitude')
         if not latitude:
             return jsonify(buildMissingParameterResponse('params.latitude')), 404
+        
         longitude = params.get('longitude')
         if not longitude:
             return jsonify(buildMissingParameterResponse('params.longitude')), 404
 
-        # Optional params
-        min_population = params.get('min_population', 50_000)
-        max_cloud_cover = params.get('max_cloud_cover', 30)
-        limit = params.get('limit', 1)
+        # Find cities
+        cities = find_closest_sunny_cities(latitude, longitude, **params)
 
-        cities = find_closest_sunny_cities(latitude, longitude, min_population=min_population, max_cloud_cover=max_cloud_cover, limit=limit)
+        # Format and return results
         return jsonify(buildSuccessResponse(cities=cities)), 200

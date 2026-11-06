@@ -2,7 +2,7 @@ import argparse
 
 from geocoder import forward_geocode
 from geocoder import reverse_geocode
-from whereisthesun import find_closest_sunny_city
+from whereisthesun import find_closest_sunny_cities
 
 
 if "__main__" == __name__:
@@ -19,7 +19,7 @@ if "__main__" == __name__:
     print(origin)
     print()
     
-    result = find_closest_sunny_city(origin['latitude'], origin['longitude'])
+    result = find_closest_sunny_cities(origin['latitude'], origin['longitude'])
     print(result)
     print()
     

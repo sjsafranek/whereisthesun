@@ -10,13 +10,14 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
-    <!-- Load Esri Leaflet from CDN -->
-<!--     <script src="https://unpkg.com/esri-leaflet@3.0.19/dist/esri-leaflet.js"></script>
-    <script src="https://unpkg.com/esri-leaflet-vector@4.3.2/dist/esri-leaflet-vector.js"></script> -->
-
+    <!-- Load fonts from Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Custom -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" crossorigin="">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loading-overlay.css') }}" crossorigin="">
 
     <style>
 
@@ -38,49 +39,6 @@
             height: calc(100% - 48px); 
         }
 
-
-        /* 1. Core Pulsing Marker Styles */
-        .gps-marker {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* The solid inner blue dot */
-        .gps-dot {
-            width: 14px;
-            height: 14px;
-            background-color: #007bff;
-            border: 2.5px solid #ffffff;
-            border-radius: 50%;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-            position: absolute;
-            z-index: 2;
-        }
-
-        /* The pulsing outer aura */
-        .gps-pulse {
-            width: 35px;
-            height: 35px;
-            background-color: rgba(0, 123, 255, 0.4);
-            border-radius: 50%;
-            position: absolute;
-            z-index: 1;
-            animation: pulse 2s ease-out infinite;
-        }
-
-        /* Pulse animation */
-        @keyframes pulse {
-            0% {
-                transform: scale(0.3);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1.2);
-                opacity: 0;
-            }
-        }
-
         /* Utilities */
         .pull-right {
             float: right;
@@ -91,50 +49,6 @@
             display: table; /* Or display: block */
             clear: both;
         }
-
-
-        /* Loading Spinner Overlay */
-/* 1. Full-screen overlay background */
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
-  z-index: 9999; /* Ensures it sits on top of everything else */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  /* Smooth fade transitions */
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-/* Class to dynamically trigger visibility */
-.loading-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* 2. The Spinner Loader (Pure CSS) */
-.spinner {
-  width: 60px;
-  height: 60px;
-  border: 6px solid #f3f3f3; /* Light grey base ring */
-  border-top: 6px solid #3498db; /* Blue accent spinning color */
-  border-radius: 50%; /* Makes it a circle */
-  animation: spin 1s linear infinite; /* Smooth continuous rotation */
-}
-
-/* Rotation keyframes */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 
     </style>
 </head>
@@ -159,107 +73,13 @@
         </span>
     </header>
 
-
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="spinner"></div>
-    </div>
-
     <div id="map"></div>
 
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/icons.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/loading-overlay.js') }}"></script>
     <script>
-
-
-        /**
-         * Loading Spinner Overlay
-         */
-        const loader = {
-            element: document.getElementById('loading-overlay'),
-          
-            show() {
-                this.element.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Optional: Locks scrolling while active
-            },
-          
-            hide() {
-                this.element.classList.remove('active');
-                document.body.style.overflow = ''; // Restores window scrolling
-            }
-        };
-
-
-        class ApiClient {
-            /**
-             * @param {string} baseUrl - The base URL for the API (e.g., 'https://example.com')
-             * @param {Object} [config={}] - Optional configuration defaults
-             */
-            constructor(baseUrl, config = {}) {
-                this.baseUrl = baseUrl.replace(/\/$/, '');
-                this.defaultHeaders = config.headers || {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json'
-                };
-                this.authToken = config.authToken || null;
-            }
-
-            generateUniqueId() {
-                return Date.now().toString(36) + Math.random().toString(36).slice(2);
-            }
-
-            buildApiRequest(latlng, options) {
-                options = options || {}
-                return {
-                    method: 'FindTheSun',
-                    params: {
-                        latitude: latlng.lat,
-                        longitude: latlng.lng,
-                        min_population: options.min_population,
-                        max_cloud_cover: options.max_cloud_cover,
-                        limit: options.limit
-                    },
-                    id: this.generateUniqueId()
-                };
-            }
-
-            findTheSun(latlng, options) {
-                let payload = this.buildApiRequest(latlng, options);
-                return fetch(`${this.baseUrl}/api/v1`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(response => response.json())
-                    .then(response => {
-                        if ('ok' == response.status)
-                            return response.data.cities;
-                        throw new Error(response.error.message);
-                    });
-            }
-        }
-
-
-        const Icons = {
-            // Define a custom sun divIcon
-            sun: L.divIcon({
-                className: 'custom-sun-icon',
-                html: '<div style="font-size: 24px; color: gold; text-shadow: 0 0 3px rgba(0,0,0,0.5);">☀️</div>',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15],
-                popupAnchor: [0, -15]
-            }),
-
-            // Define the Custom DivIcon
-            gps: L.divIcon({
-                className: 'gps-marker', // Remove default wrapper styling
-                html: '<div class="gps-pulse"></div><div class="gps-dot"></div>',
-                iconSize: [35, 35],      // Container bounds
-                iconAnchor: [17.5, 17.5] // Center the anchor exactly
-            })
-        }
-
-        const HELSINKI = [60.1708, 24.9375];
-
 
         function buildBaseLayers() {
             // Configure map layers
@@ -306,193 +126,18 @@
         }
 
 
-        /**
-         * Search Options Control
-         */
-        L.Control.SearchOptionsControl = L.Control.extend({
-            options: {
-                position: 'bottomright'
-            },
-
-            initialize: function(options) {
-                L.Util.setOptions(this, options);
-            },
-
-            onAdd: function(map) {
-                let self = this;
-
-                // 1. Create a container DOM element
-                var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-                container.style.backgroundColor = 'white';
-                container.style.padding = '8px';
-                container.style.cursor = 'pointer';
-
-                // 2. Add HTML filter elements (e.g., a dropdown or button)
-                container.innerHTML = `
-                    <div style="padding: 2px 4px">
-                        <label for="number-of-cities"><strong>Number of cities:</strong></label>
-                        <select id="number-of-cities" class="search-options-select">
-                            <option value="1" selected>1</option>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                        </select>
-                    </div>
-                    <div style="padding: 2px 4px">
-                        <label for="min-population"><strong>Min Population</strong></label>
-                        <select id="min-population" class="search-options-select">
-                            <option value="25000">25,000</option>
-                            <option value="50000" selected>50,000</option>
-                            <option value="75000">75,000</option>
-                        </select>
-                    </div>
-                    <div style="padding: 2px 4px">
-                        <label for="max-cloud-cover"><strong>Max clound cover</strong></label>
-                        <select id="max-cloud-cover" class="search-options-select">
-                            <option value="10">10%</option>
-                            <option value="20">20%</option>
-                            <option value="30" selected>30%</option>
-                            <option value="40">40%</option>
-                            <option value="50">50%</option>
-                        </select>
-                    </div>                    
-                `;
-
-                // 3. Prevent map click events from firing when interacting with the control
-                L.DomEvent.disableClickPropagation(container);
-
-                // 4. Add event listener for filtering data
-                container.querySelectorAll('.search-options-select').forEach(function(element) {
-                    L.DomEvent.on(element, 'change', function(e) {
-                        self.options.onSearchOptionsChange({
-                            limit: parseInt(container.querySelector('#number-of-cities').value),
-                            min_population: parseInt(container.querySelector('#min-population').value),
-                            max_cloud_cover: parseInt(container.querySelector('#max-cloud-cover').value)
-                        }); 
-                    });
-                });
-
-                return container;
-            },
-
-            onRemove: function(map) {
-                // Clean up event listeners if necessary to prevent memory leaks
-            }
-        });
-
-        // Factory function
-        L.control.searchOptionsControl = function(opts) {
-            return new L.Control.SearchOptionsControl(opts);
-        };
-
-
-        /**
-         * App
-         */
-        class App {
-            constructor(container_id) {
-                let self = this;
-
-                this.api = new ApiClient("/");
-
-                this.map = L.map(container_id, {
-                    center: HELSINKI,
-                    zoom: 9,
-                });
-
-                this._layers = {
-                    'sunnyCities':  L.featureGroup(),
-                    'userMarker': L.marker(HELSINKI, { icon: Icons.gps }),
-                    'userAccuracy': L.circle(HELSINKI, {
-                        color: '#007bff',
-                        fillColor: '#007bff',
-                        fillOpacity: 0.15,
-                        weight: 1
-                    })
-                };
-                this._layers.userLocationFeatureGroup = L.featureGroup([this._layers.userMarker, this._layers.userAccuracy]);
-
-                this._layers.sunnyCities.addTo(this.map);
-
-                this.search_options = {
-                    min_population: 50000,
-                    max_cloud_cover: 30,
-                    limit: 1
-                };
-
-                L.control.searchOptionsControl({
-                    onSearchOptionsChange: function(search_options) {
-                        self.search_options = search_options;
-                        self.getUserLocation();
-                    }
-                }).addTo(this.map);
-
-                this.map.on('locationfound', (event) => self._onLocationFound(event) )
-                        .on('locationerror', console.log);
-            
-                this.getUserLocation(true);
-            }
-
-            _onLocationFound(event) {
-                let self = this;
-                this.setUserLocation(event.latlng, event.accuracy);
-                this.findSunnyCities(event.latlng);
-            }
-
-            findSunnyCities(latlng) {
-                let self = this;
-                loader.show();
-                this.api.findTheSun(latlng, this.search_options)
-                    .then((cities) => self.setSunnyCities(cities))
-                    .then(() => self.setMapBounds())
-                    .catch((error) => {
-                        console.error("Caught an error:", error.message);
-                    })
-                    .finally(() => {
-                        loader.hide();
-                    });
-            }
-
-            getUserLocation(set_view) {
-                // map.locate({setView: true, watch: true});
-                this.map.locate({
-                    setView: set_view || false,
-                    maxZoom: 14
-                });           
-            }
-
-            setUserLocation(latlng, accuracy) {
-                this._layers.userMarker.setLatLng(latlng);
-                this._layers.userAccuracy.setLatLng(latlng);
-                this._layers.userAccuracy.setRadius(accuracy/2);
-                !this.map.hasLayer(this._layers.userLocationFeatureGroup) && 
-                    this._layers.userLocationFeatureGroup.addTo(this.map);
-            }
-
-            _makeCityMarker(city) {
-                return L.marker([city.latitude, city.longitude], { icon: Icons.sun }).bindPopup(city.name);
-            }
-
-            setSunnyCities(cities) {
-                this._layers.sunnyCities.clearLayers();
-                for (let i = 0; i < cities.length; i++) {
-                    let city = cities[i];
-                    const marker = this._makeCityMarker(city);
-                    this._layers.sunnyCities.addLayer(marker);
-                }
-            }
-
-            setMapBounds() {
-                const bounds = L.latLngBounds();
-                bounds.extend(this._layers.sunnyCities.getBounds());
-                bounds.extend(this._layers.userMarker.getLatLng());
-                this.map.fitBounds(bounds, { maxZoom: 14 });
-            }
-        }
-
-
         var init = function(container_id) {
             
-            const app = new App(container_id);
+            const loader = new LoadingOverlay();
+
+            const app = new App(container_id, {
+                onSearchStart: function() {
+                    loader.show();
+                },
+                onSearchEnd: function() {
+                    loader.hide();
+                }
+            });
 
             // Setup layer control
             const baselayers = buildBaseLayers();
