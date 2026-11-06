@@ -92,6 +92,50 @@
             clear: both;
         }
 
+
+        /* Loading Spinner Overlay */
+/* 1. Full-screen overlay background */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+  z-index: 9999; /* Ensures it sits on top of everything else */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  /* Smooth fade transitions */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Class to dynamically trigger visibility */
+.loading-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 2. The Spinner Loader (Pure CSS) */
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #f3f3f3; /* Light grey base ring */
+  border-top: 6px solid #3498db; /* Blue accent spinning color */
+  border-radius: 50%; /* Makes it a circle */
+  animation: spin 1s linear infinite; /* Smooth continuous rotation */
+}
+
+/* Rotation keyframes */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
     </style>
 </head>
 <body>
@@ -116,9 +160,31 @@
     </header>
 
 
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <div id="map"></div>
 
     <script>
+
+
+        /**
+         * Loading Spinner Overlay
+         */
+        const loader = {
+            element: document.getElementById('loading-overlay'),
+          
+            show() {
+                this.element.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Optional: Locks scrolling while active
+            },
+          
+            hide() {
+                this.element.classList.remove('active');
+                document.body.style.overflow = ''; // Restores window scrolling
+            }
+        };
 
 
         class ApiClient {
@@ -374,11 +440,15 @@
 
             findSunnyCities(latlng) {
                 let self = this;
+                loader.show();
                 this.api.findTheSun(latlng, this.search_options)
                     .then((cities) => self.setSunnyCities(cities))
                     .then(() => self.setMapBounds())
                     .catch((error) => {
                         console.error("Caught an error:", error.message);
+                    })
+                    .finally(() => {
+                        loader.hide();
                     });
             }
 
