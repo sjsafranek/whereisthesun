@@ -5,6 +5,7 @@ from flask import render_template
 from flask import render_template_string
 
 from whereisthesun import find_closest_sunny_city
+from whereisthesun import find_closest_sunny_cities
 
 
 def buildSuccessResponse(**kwargs):
@@ -45,13 +46,16 @@ def api_v1():
     
     api_request = request.json
     
+    # Check method aargument
     method = api_request.get('method')
     if not method:
         return jsonify(buildMissingParameterResponse('method')), 404
     if method not in METHODS:
         return jsonify(buildMethodNotAllowedResponse()), 405
 
+    # Method handlers
     if 'FindTheSun' == method:
+        # Required parameters
         params = api_request.get('params')
         if not params:
             return jsonify(buildMissingParameterResponse('params')), 404
@@ -65,12 +69,7 @@ def api_v1():
         # Optional params
         min_population = params.get('min_population', 50_000)
         max_cloud_cover = params.get('max_cloud_cover', 30)
+        limit = params.get('limit', 1)
 
-        city = find_closest_sunny_city(latitude, longitude, min_population=min_population, max_cloud_cover=max_cloud_cover)
-        return jsonify(buildSuccessResponse(city=city)), 200
-
-
-
-# if "__main__" == __name__:
-#     app.run(debug=True)
-
+        cities = find_closest_sunny_cities(latitude, longitude, min_population=min_population, max_cloud_cover=max_cloud_cover, limit=limit)
+        return jsonify(buildSuccessResponse(cities=cities)), 200
