@@ -138,9 +138,12 @@ L.Control.SearchOptionsControl = L.Control.extend({
             <div style="padding: 2px 4px">
                 <label for="min-population"><strong>Min Population</strong></label>
                 <select id="min-population" class="search-options-select">
-                    <option value="25000">25,000</option>
-                    <option value="50000" selected>50,000</option>
-                    <option value="75000">75,000</option>
+                    <option value="0">0</option>
+                    <option value="8000" selected>8,000</option>
+                    <option value="16000">16,000</option>
+                    <option value="32000">32,000</option>
+                    <option value="64000">64,000</option>
+                    <option value="128000">128,000</option>
                 </select>
             </div>
             <div style="padding: 2px 4px">
