@@ -28,7 +28,7 @@ class App {
         this._layers.sunnyCities.addTo(this.map);
 
         this.search_options = {
-            min_population: 50000,
+            min_population: 8000,
             max_cloud_cover: 30,
             limit: 1
         };
