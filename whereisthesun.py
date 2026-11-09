@@ -3,7 +3,6 @@ from geocoder import reverse_geocode
 from geodata import fetch_cities
 from geoutils import haversine_km
 from geoutils import is_daytime
-from sunrise_sunset import is_day
 from weather import fetch_weather
 
 
