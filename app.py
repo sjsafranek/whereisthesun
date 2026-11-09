@@ -4,6 +4,7 @@ from flask import request
 from flask import render_template
 from flask import render_template_string
 
+
 from whereisthesun import find_closest_sunny_cities
 
 
@@ -31,6 +32,7 @@ def buildMissingParameterResponse(parameter_name):
     return buildErrorResponse( f"Missing Parameter: '{parameter_name}'", 404)
 
 
+
 app = Flask(__name__, template_folder='templates', static_url_path='/static')
 
 
@@ -40,7 +42,7 @@ def index():
 
 
 @app.post("/api/v1")
-def api_v1():
+def api_v1():   
     METHODS = ['FindTheSun']
     
     api_request = request.json
@@ -54,22 +56,27 @@ def api_v1():
 
     # Method handlers
     if 'FindTheSun' == method:
+        return api_v1_findTheSun(api_request)
 
-        # Required parameters
-        params = api_request.get('params')
-        if not params:
-            return jsonify(buildMissingParameterResponse('params')), 404
-        
-        latitude = params.get('latitude')
-        if not latitude:
-            return jsonify(buildMissingParameterResponse('params.latitude')), 404
-        
-        longitude = params.get('longitude')
-        if not longitude:
-            return jsonify(buildMissingParameterResponse('params.longitude')), 404
 
-        # Find cities
-        cities = find_closest_sunny_cities(latitude, longitude, **params)
 
-        # Format and return results
-        return jsonify(buildSuccessResponse(cities=cities)), 200
+def api_v1_findTheSun(api_request):
+    # Required parameters
+    params = api_request.get('params')
+    if not params:
+        return jsonify(buildMissingParameterResponse('params')), 404
+    
+    latitude = params.get('latitude')
+    if not latitude:
+        return jsonify(buildMissingParameterResponse('params.latitude')), 404
+    
+    longitude = params.get('longitude')
+    if not longitude:
+        return jsonify(buildMissingParameterResponse('params.longitude')), 404
+
+    # Find cities
+    cities = find_closest_sunny_cities(latitude, longitude, **params)
+
+    # Format and return results
+    return jsonify(buildSuccessResponse(cities=cities)), 200
+

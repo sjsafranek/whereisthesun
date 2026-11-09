@@ -54,12 +54,25 @@ class App {
 
     findSunnyCities(latlng) {
         let self = this;
+
+        if (this.findSunnyCities.abort_controller) {
+            this.findSunnyCities.abort_controller.abort();
+        }
+        this.findSunnyCities.abort_controller = new AbortController();
+        
         this.options.onSearchStart && this.options.onSearchStart();
-        this.api.findTheSun(latlng, this.search_options)
+        let options = JSON.parse(JSON.stringify(this.search_options));
+        options.signal = this.findSunnyCities.abort_controller.signal;
+        
+        this.api.findTheSun(latlng, options)
             .then((cities) => self.setSunnyCities(cities))
             .then(() => self.setMapBounds())
             .catch((error) => {
-                console.error("Caught an error:", error.message);
+                if (error.name === 'AbortError') {
+                    console.log('Fetch successfully canceled!');
+                } else {
+                    console.error('An actual network error occurred:', error);
+                }
             })
             .finally(() => {
                 self.options.onSearchEnd && this.options.onSearchEnd();

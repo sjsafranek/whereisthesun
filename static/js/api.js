@@ -39,7 +39,8 @@ class ApiClient {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: options.signal  // <-- Connect the abort signal here
             })
             .then(response => response.json())
             .then(response => {
