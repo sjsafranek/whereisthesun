@@ -1,8 +1,9 @@
 from geocoder import forward_geocode
 from geocoder import reverse_geocode
 from geodata import fetch_cities
-from geoutils import is_daytime
 from geoutils import haversine_km
+from geoutils import is_daytime
+from sunrise_sunset import is_day
 from weather import fetch_weather
 
 
@@ -13,7 +14,8 @@ def fetch_candidate_cities(lat, lon, when=None, min_population=50_000, **kwargs)
     for city in cities:
         if city["population"] < min_population:
             continue
-        if not is_daytime(city["latitude"], city["longitude"], when):
+        if not is_day(city["latitude"], city["longitude"]):
+        # if not is_daytime(city["latitude"], city["longitude"], when):
             continue
         city = dict(city, distance_km=haversine_km(lat, lon, city["latitude"], city["longitude"]))
         candidates.append(city)
