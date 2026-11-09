@@ -52,6 +52,6 @@ def is_daytime(lat, lon, timezone, verbose=False):
         
         # This exception happens in Polar regions when the sun doesn't rise or set
         # We check the sun's altitude to see if it is polar day or polar night
-        sun_altitude = elevation(location.observer, current_time_utc)
+        sun_altitude = elevation(location.observer, now)
         return sun_altitude > 0
 
