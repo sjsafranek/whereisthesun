@@ -9,10 +9,6 @@ from astral import LocationInfo
 from astral.sun import sun
 
 
-# def is_day(lat, lon, when=None, threshold_deg=-0.833):
-#     when = when or datetime.now(timezone.utc)
-#     return elevation(Observer(latitude=lat, longitude=lon), when) > threshold_deg
-
 
 def haversine_km(lat1, lon1, lat2, lon2):
     lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
@@ -44,13 +40,14 @@ def is_daytime(lat, lon, when=None, verbose=False):
         if sunrise > sunset:
             sunset = sunset + timedelta(days=1)
 
+        print(sunrise, current_time_utc, sunset)
+
         # 5. It is daytime if the current time is between sunrise and sunset
         return sunrise <= current_time_utc <= sunset
         
     except ValueError:
         # This exception happens in Polar regions when the sun doesn't rise or set
         # We check the sun's altitude to see if it is polar day or polar night
-        from astral.sun import elevation
         sun_altitude = elevation(location.observer, current_time_utc)
         return sun_altitude > 0
 
