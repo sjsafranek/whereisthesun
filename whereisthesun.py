@@ -3,18 +3,17 @@ from geocoder import reverse_geocode
 from geodata import fetch_cities
 from geoutils import haversine_km
 from geoutils import is_daytime
-# from geoutils import get_sun_events
 from weather import fetch_weather
 
 
 # 1. Candidate cities, nearest first, daylight only (cheap local check)
-def fetch_candidate_cities(lat, lon, when=None, min_population=50_000, **kwargs):
+def fetch_candidate_cities(lat, lon, min_population=50_000, **kwargs):
     candidates = []
     cities = fetch_cities()
     for city in cities:
         if city["population"] <= min_population:
             continue
-        if not is_daytime(city["latitude"], city["longitude"], city['timezone'], when):
+        if not is_daytime(city["latitude"], city["longitude"], city['timezone']):
             continue
         city = dict(city, distance_km=haversine_km(lat, lon, city["latitude"], city["longitude"]))
         candidates.append(city)
@@ -51,7 +50,5 @@ def find_closest_sunny_cities(lat, lon, batch_size=50, limit=1, max_cloud_cover=
                 })
                 if limit <= len(results):
                     return results[0:limit]
-            #else:
-            #    print(f"{city['name']} is_day={weather['is_day']} cloud_cover={weather['cloud_cover']} precipitation={weather['precipitation']}")
     return results
 
