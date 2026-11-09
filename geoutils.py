@@ -25,7 +25,7 @@ def is_daytime(lat, lon, when=None, verbose=False):
     location = LocationInfo(latitude=lat, longitude=lon)
     
     # 2. Get the current time in UTC
-    # current_time_utc = datetime.utcnow()
+    # current_time_utc = datetime.utcnow(
     current_time_utc = when or datetime.utcnow()
     
     try:
@@ -39,13 +39,13 @@ def is_daytime(lat, lon, when=None, verbose=False):
 
         if sunrise > sunset:
             sunset = sunset + timedelta(days=1)
-
-        print(sunrise, current_time_utc, sunset)
-
+            
         # 5. It is daytime if the current time is between sunrise and sunset
         return sunrise <= current_time_utc <= sunset
         
-    except ValueError:
+    except ValueError as err:
+        print(err)
+        
         # This exception happens in Polar regions when the sun doesn't rise or set
         # We check the sun's altitude to see if it is polar day or polar night
         sun_altitude = elevation(location.observer, current_time_utc)

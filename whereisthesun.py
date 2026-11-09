@@ -13,7 +13,6 @@ def fetch_candidate_cities(lat, lon, when=None, min_population=50_000, **kwargs)
     for city in cities:
         if city["population"] < min_population:
             continue
-        # if not is_day(city["latitude"], city["longitude"]):
         if not is_daytime(city["latitude"], city["longitude"], when):
             continue
         city = dict(city, distance_km=haversine_km(lat, lon, city["latitude"], city["longitude"]))
