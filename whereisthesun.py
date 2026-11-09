@@ -50,5 +50,7 @@ def find_closest_sunny_cities(lat, lon, batch_size=50, limit=1, max_cloud_cover=
                 })
                 if limit <= len(results):
                     return results[0:limit]
+            else:
+                print(f"{city['name']} is_day={weather['is_day']} cloud_cover={weather['cloud_cover']} precipitation={weather['precipitation']}")
     return results
 
