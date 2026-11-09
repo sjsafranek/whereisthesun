@@ -1,6 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
-from datetime import timezone
+from zoneinfo import ZoneInfo
 from math import radians, sin, cos, asin, sqrt
 
 from astral import Observer
@@ -16,32 +16,36 @@ def haversine_km(lat1, lon1, lat2, lon2):
     return 6371 * 2 * asin(sqrt(a))
 
 
-def is_daytime(lat, lon, when=None, verbose=False):
+
+def is_daytime(lat, lon, timezone, verbose=False):
     """
     Returns True if it is currently daytime at the given lat/long, 
     and False if it is nighttime.
     """
     # 1. Create a dummy location container for the coordinates
-    location = LocationInfo(latitude=lat, longitude=lon)
+    location = LocationInfo(latitude=lat, longitude=lon, timezone=timezone)
     
     # 2. Get the current time in UTC
-    # current_time_utc = datetime.utcnow(
-    current_time_utc = when or datetime.utcnow()
+    now = datetime.now(ZoneInfo(timezone))
     
     try:
         # 3. Calculate astronomical event times (sunrise, sunset, etc.) for today
-        sun_events = sun(location.observer, date=current_time_utc.date())
+        sun_events = sun(location.observer, date=now.date(), tzinfo=location.timezone)
         
         # 4. Extract sunrise and sunset (returned as UTC-aware datetimes)
         # We strip the timezone info to easily compare with our naive UTC datetime
-        sunrise = sun_events['sunrise'].replace(tzinfo=None)
-        sunset = sun_events['sunset'].replace(tzinfo=None)
+        sunrise = sun_events['sunrise']
+        sunset = sun_events['sunset']
+
+        # if verbose:
+        #     print(sunrise.strftime("%m/%d/%Y %H:%M:%S"), now.strftime("%m/%d/%Y %H:%M:%S"), sunset.strftime("%m/%d/%Y %H:%M:%S"))
+        #     print(sunrise <= now <= sunset)
 
         if sunrise > sunset:
             sunset = sunset + timedelta(days=1)
             
         # 5. It is daytime if the current time is between sunrise and sunset
-        return sunrise <= current_time_utc <= sunset
+        return sunrise <= now <= sunset
         
     except ValueError as err:
         print(err)
