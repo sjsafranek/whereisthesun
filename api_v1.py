@@ -1,6 +1,7 @@
 from flask import jsonify
 from flask import request
 from flask import Blueprint
+from flask import current_app
 
 import api_helpers
 from whereisthesun import find_closest_sunny_cities
@@ -27,6 +28,7 @@ def find_the_sun():
         return jsonify(api_helpers.buildMissingParameterResponse('params.longitude')), 404
 
     # Find cities
+    current_app.logger.info(params)
     cities = find_closest_sunny_cities(latitude, longitude, **params)
 
     # Format and return results

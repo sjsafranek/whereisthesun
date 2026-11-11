@@ -35,6 +35,8 @@ def find_closest_sunny_cities(lat, lon, batch_size=50, limit=1, max_cloud_cover=
     for i in range(0, len(cities), batch_size):
         batch = cities[i:i + batch_size]
         for city, weather in zip(batch, fetch_weather(batch)):
+            # if 'OR' == city['admin1code']:
+            #     print(city['name'], weather)
             if (
                 weather["is_day"] == 1
                 and weather["cloud_cover"] <= max_cloud_cover
