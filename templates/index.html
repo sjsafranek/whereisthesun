@@ -17,12 +17,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&display=swap" rel="stylesheet">
 
     <!-- Custom -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" crossorigin="">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loading-overlay.css') }}" crossorigin="">
-    <script defer src="{{ url_for('static', filename='js/api.js') }}"></script>
-    <script defer src="{{ url_for('static', filename='js/icons.js') }}"></script>
-    <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/loading-overlay.js') }}"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet-control-refresh.css') }}" crossorigin="">
+    <script defer src="{{ url_for('static', filename='js/leaflet-control-refresh.js') }}"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet-icon-gps.css') }}" crossorigin="">
+    <script defer src="{{ url_for('static', filename='js/leaflet-icon-gps.js') }}"></script>
+
+    <script defer src="{{ url_for('static', filename='js/leaflet-icon-sun.js') }}"></script>
+
+    <script defer src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
 
     <!-- Tile Servers -->
     <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>

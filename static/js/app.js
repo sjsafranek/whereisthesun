@@ -15,7 +15,7 @@ class App {
 
         this._layers = {
             'sunnyCities':  L.featureGroup(),
-            'userMarker': L.marker([0, 0], { icon: Icons.gps }),
+            'userMarker': L.marker([0, 0], { icon: L.icon.gps }),
             'userAccuracy': L.circle([0, 0], {
                 color: '#007bff',
                 fillColor: '#007bff',
@@ -33,6 +33,7 @@ class App {
             limit: 1
         };
 
+        // Add custom controls
         L.control.searchOptionsControl({
             onSearchOptionsChange: function(search_options) {
                 self.search_options = search_options;
@@ -40,9 +41,18 @@ class App {
             }
         }).addTo(this.map);
 
+        L.control.refreshButtonControl({
+            position: 'topleft',
+            onClick: function() {
+                self.getUserLocation();
+            } 
+        }).addTo(this.map);
+
+        // Add user location event listeners
         this.map.on('locationfound', (event) => self._onLocationFound(event) )
                 .on('locationerror', console.log);
     
+        // Get user location
         this.getUserLocation(true);
     }
 
@@ -96,7 +106,7 @@ class App {
     }
 
     _makeCityMarker(city) {
-        return L.marker([city.latitude, city.longitude], { icon: Icons.sun }).bindPopup(city.name);
+        return L.marker([city.latitude, city.longitude], { icon: L.icon.sun }).bindPopup(city.name);
     }
 
     setSunnyCities(cities) {
@@ -197,3 +207,4 @@ L.Control.SearchOptionsControl = L.Control.extend({
 L.control.searchOptionsControl = function(opts) {
     return new L.Control.SearchOptionsControl(opts);
 };
+

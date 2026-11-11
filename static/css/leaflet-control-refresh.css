@@ -1,0 +1,8 @@
+
+/**
+ * Refresh Button Control
+ */
+
+.leaflet-control-refresh svg {
+    padding: 6px;
+}
