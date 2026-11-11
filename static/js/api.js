@@ -34,7 +34,7 @@ class ApiClient {
 
     findTheSun(latlng, options) {
         let payload = this.buildApiRequest(latlng, options);
-        return fetch(`${this.baseUrl}/api/v1`, {
+        return fetch(`${this.baseUrl}/api/v1/sun`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

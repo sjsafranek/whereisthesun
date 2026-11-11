@@ -4,33 +4,22 @@ from flask import request
 from flask import render_template
 from flask import render_template_string
 
-import api_v1 as v1
+from api_v1 import v1
 import api_helpers
 
 
 app = Flask(__name__, template_folder='templates', static_url_path='/static')
+# app.config['TEMPLATES_AUTO_RELOAD'] = True
+# app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-# app.register_blueprint(v1, url_prefix='/api/v1')
 
+# Add API endpoints
+app.register_blueprint(v1, url_prefix='/api/v1')
 
-@app.route("/")
+# Add views
+@app.route('/', methods=['GET'])
+@app.route('/home', methods=['GET'])
+@app.route('/index', methods=['GET'])
 def index():
-    return render_template("index.html")
-
-
-@app.post("/api/v1")
-def api_v1(): 
-    api_request = request.json
-    
-    # Check method aargument
-    method = api_request.get('method')
-    if not method:
-        return jsonify(api_helpers.buildMissingParameterResponse('method')), 404
-
-    # Method handlers
-    if 'FindTheSun' == method:
-        return v1.findTheSun(api_request)
-    
-    # Handle method not allowed
-    return jsonify(api_helpers.buildMethodNotAllowedResponse()), 405
+    return render_template('index.html')
 
