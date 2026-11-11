@@ -44,6 +44,7 @@ def find_closest_sunny_cities(lat, lon, batch_size=50, limit=1, max_cloud_cover=
             ):
                 results.append({
                     "name": city["name"],
+                    "admin1code": city["admin1code"],
                     "country": city["countrycode"],
                     "latitude": city["latitude"],
                     "longitude": city["longitude"],

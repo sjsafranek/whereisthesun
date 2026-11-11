@@ -1,3 +1,4 @@
+import json
 import argparse
 
 from geocoder import forward_geocode
@@ -16,16 +17,10 @@ if "__main__" == __name__:
     location = args.location
 
     origin = forward_geocode(location)
-    print(origin)
-    print()
     
-    result = find_closest_sunny_cities(origin['latitude'], origin['longitude'])
-    print(result)
-    print()
-    
-    destination = reverse_geocode(result['latitude'], result['longitude'])
-    print(destination)
-    print()
+    result = find_closest_sunny_cities(origin['latitude'], origin['longitude'])[0]
+    print(json.dumps(result))
+
 
 
 

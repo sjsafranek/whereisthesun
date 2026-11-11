@@ -1,5 +1,4 @@
 from geopy.geocoders import Nominatim
-# from geopy.exc import GeocoderServiceError
 
 
 # Note: Nominatim requires a unique user_agent string to identify your application.
