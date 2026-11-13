@@ -19,16 +19,19 @@ def getCurrentWeather(location):
         logging.debug(f"Getting weather from cache {key}")
         return item
 
-    params = {
-    	'lat': lat,
-    	'lon': lon,
-    	'appid': OPEN_WEATHER_MAP_API_KEY
-    }
-
+    # Fetch weather from api
     logging.debug(f"Getting weather from OpenWeatherMap {key}")
-    response = requests.get("https://api.openweathermap.org/data/2.5/weather", params=params)
+    response = requests.get("https://api.openweathermap.org/data/2.5/weather", 
+                            params={
+                                'lat': lat,
+                                'lon': lon,
+                                'appid': OPEN_WEATHER_MAP_API_KEY
+                            })
+    if 200 != response.status_code:
+        return None
     data = response.json()
 
+    # Cache the response
     cache.set(key, data)
 
     return data
