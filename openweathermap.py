@@ -17,11 +17,11 @@ def getCurrentWeather(location):
     key = f'weather:{lat},{lon}'
     item = cache.get(key)
     if item:
-        logging.debug(f"Getting weather from cache: location={lat},{lon}")
+        logging.debug(f"Recieved weather from cache for Location({lat},{lon})")
         return item
 
     # Fetch weather from api
-    logging.debug(f"Getting weather from OpenWeatherMap: location={lat},{lon}")
+    logging.debug(f"Fetching weather from OpenWeatherMap for Location({lat},{lon})")
     response = requests.get("https://api.openweathermap.org/data/2.5/weather", 
                             params={
                                 'lat': lat,
