@@ -1,0 +1,3 @@
+import os
+
+OPEN_WEATHER_MAP_API_KEY = os.getenv("OPEN_WEATHER_MAP_API_KEY")
