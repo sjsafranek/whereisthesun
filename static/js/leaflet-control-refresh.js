@@ -14,9 +14,13 @@ L.Control.RefreshButtonControl = L.Control.extend({
         container.style.width = '30px';
         container.style.height = '30px';
         container.style.cursor = 'pointer';
-        container.onclick = function() {
+
+        // Add event listeners
+        function callback() {
             self.options.onClick();
-        };
+        }
+        L.DomEvent.on(container, 'touchstart', callback, this);
+        L.DomEvent.on(container, 'click', callback, this);
 
         // Create the anchor link inside the div
         const link = L.DomUtil.create('a', 'leaflet-control-refresh', container);
