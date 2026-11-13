@@ -13,6 +13,7 @@ def getCurrentWeather(location):
     lat = location['latitude']
     lon = location['longitude']
 
+    # Check cache for existing response
     key = f'{lat},{lon}'
     item = cache.get(key)
     if item:
