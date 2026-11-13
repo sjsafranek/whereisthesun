@@ -14,7 +14,7 @@ def getCurrentWeather(location):
     lon = location['longitude']
 
     # Check cache for existing response
-    key = f'{lat},{lon}'
+    key = f'weather:{lat},{lon}'
     item = cache.get(key)
     if item:
         logging.debug(f"Getting weather from cache {key}")

@@ -1,6 +1,4 @@
 import logging
-from geocoder import forward_geocode
-from geocoder import reverse_geocode
 from geodata import fetch_cities
 from geoutils import haversine_km
 from geoutils import is_daytime
