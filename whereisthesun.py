@@ -5,7 +5,6 @@ from geodata import fetch_cities
 from geoutils import haversine_km
 from geoutils import is_daytime
 from weather import fetch_weather
-import api_weather_gov
 import openweathermap
 
 
