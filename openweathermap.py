@@ -21,7 +21,7 @@ def getCurrentWeather(location):
         return item
 
     # Fetch weather from api
-    logging.debug(f"Getting weather from OpenWeatherMap {key}")
+    logging.debug(f"Getting weather from OpenWeatherMap {lat},{lon}")
     response = requests.get("https://api.openweathermap.org/data/2.5/weather", 
                             params={
                                 'lat': lat,
