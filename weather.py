@@ -12,7 +12,7 @@ def fetch_weather(cities):
         "longitude": ",".join(str(city["longitude"]) for city in cities),
         "current": "cloud_cover,precipitation,is_day",
     }
-    response = requests.get(OPEN_METEO_URL, params=params, timeout=15)
+    response = requests.get(OPEN_METEO_URL, params=params, timeout=30)
     response.raise_for_status()
     data = response.json()
     # Open-Meteo returns a dict for one location, a list for several
