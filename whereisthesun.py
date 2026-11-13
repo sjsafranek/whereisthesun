@@ -6,7 +6,7 @@ from geoutils import haversine_km
 from geoutils import is_daytime
 from weather import fetch_weather
 import api_weather_gov
-import openweatherapi
+import openweathermap
 
 
 # 1. Candidate cities, nearest first, daylight only (cheap local check)
@@ -34,11 +34,11 @@ def find_closest_sunny_cities(lat, lon, batch_size=50, limit=1, max_cloud_cover=
     cities = fetch_candidate_cities(lat, lon, **kwargs)
 
     # 2. OpenWeatherApi :: Fetch weather
-    if openweatherapi.isEnabled():
+    if openweathermap.isEnabled():
         logging.info("Using OpenWeatherApi")
         results = []
         for city in cities:
-            weather = openweatherapi.getCurrentWeather(city)    
+            weather = openweathermap.getCurrentWeather(city)    
             if not weather:
                 continue
             if (
