@@ -1,29 +1,90 @@
-import requests
+import logging
+
+import cache
+import openmetro
+import openweathermap
 
 
-# https://open-meteo.com/en/docs
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+class Weather(object):
+
+    def __init__(self, data):
+        self.data = data   
+
+    def toDict(self):
+        return self.data
 
 
-def fetch_weather(cities):
-    """Current weather for a batch of cities in a single API call."""
-    params = {
-        "latitude": ",".join(str(city["latitude"]) for city in cities),
-        "longitude": ",".join(str(city["longitude"]) for city in cities),
-        "current": "cloud_cover,precipitation,is_day",
-    }
-    response = requests.get(OPEN_METEO_URL, params=params, timeout=30)
-    response.raise_for_status()
-    data = response.json()
-    # Open-Meteo returns a dict for one location, a list for several
-    if not isinstance(data, list):
-        data = [data]
-    return [
-        {
-            **{key: value for key, value in item.items() if not isinstance(value, dict)},
-            **item['current'], 
-            **{f"{key}_unit": value for key, value in item['current_units'].items()}
-        }
-        for item in data
-    ]
+class OpenWeatherMapWeather(Weather):
+    def __init__(self, data):
+        self.data = data
+
+    @property
+    def source(self):
+        return "OpenWeatherMap"
+
+    @property
+    def cloud_cover(self):
+        return self.data["clouds"]["all"]
+    
+    @property
+    def precipitation(self):
+        return self.data.get("rain", {}).get("1h", 0.0)
+
+
+class OpenMetroWeather(Weather):
+    def __init__(self, data):
+        self.data = data
+
+    @property
+    def source(self):
+        return "OpenMetro"
+
+    @property
+    def cloud_cover(self):
+        return self.data["cloud_cover"]
+    
+    @property
+    def precipitation(self):
+        return self.data["precipitation"]
+
+
+def _getCurrentWeather(location):
+    if openweathermap.isEnabled():
+        weather = openweathermap.getCurrentWeather(location)
+        if weather:
+            weather['_source'] = "OpenWeatherMap"
+            return OpenWeatherMapWeather(weather)
+
+    weather = openmetro.getCurrentWeather(location)
+    if weather:
+        weather['_source'] = "OpenMetro"
+        return OpenMetroWeather(weather)
+
+    return None
+
+
+def getCurrentWeather(location):
+    lat = location['latitude']
+    lon = location['longitude']
+    key = f'weather:{lat},{lon}'
+
+    # Check cache for existing response
+    item = cache.get(key)
+    if item:
+        logging.debug(f"Recieved weather from cache for Location({lat},{lon})")
+        if "_source" in item:
+            if "OpenMetro" == item["_source"]:
+                return OpenMetroWeather(item)
+            elif "OpenWeatherMap" == item["_source"]:
+                return OpenWeatherMapWeather(item)
+
+    # Fetch weather from api
+    weather = _getCurrentWeather(location)
+    if not weather:
+    	return None
+
+    # Cache the response
+    cache.set(key, weather.data)
+
+    return weather
 

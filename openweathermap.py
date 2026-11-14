@@ -9,31 +9,16 @@ def isEnabled():
     return None != OPEN_WEATHER_MAP_API_KEY
 
 
-def getCurrentWeather(location):
-    lat = location['latitude']
-    lon = location['longitude']
-
-    # Check cache for existing response
-    key = f'weather:{lat},{lon}'
-    item = cache.get(key)
-    if item:
-        logging.debug(f"Recieved weather from cache for Location({lat},{lon})")
-        return item
-
-    # Fetch weather from api
-    logging.debug(f"Fetching weather from OpenWeatherMap for Location({lat},{lon})")
+def getCurrentWeather(location): 
+    logging.debug(f"Fetching weather from OpenWeatherMap for Location({location['latitude']},{location['longitude']})")
     response = requests.get("https://api.openweathermap.org/data/2.5/weather", 
                             params={
-                                'lat': lat,
-                                'lon': lon,
+                                'lat': location['latitude'],
+                                'lon': location['longitude']   ,
                                 'appid': OPEN_WEATHER_MAP_API_KEY
                             })
     if 200 != response.status_code:
         return None
-    data = response.json()
+    return response.json()
 
-    # Cache the response
-    cache.set(key, data)
-
-    return data
 
