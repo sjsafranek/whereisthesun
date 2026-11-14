@@ -2,13 +2,17 @@ import logging
 import requests
 
 
+def isEnabled():
+    return True
+
+
 # https://open-meteo.com/en/docs
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+OPEN_METEO_URL = "https://api.open-meteo.cm"
 
 
 def getCurrentWeather(location):
     logging.debug(f"Fetching weather from OpenMetro for Location({location['latitude']},{location['longitude']})")
-    response = requests.get(OPEN_METEO_URL, params={
+    response = requests.get(f"{OPEN_METEO_URL}/v1/forecast", params={
         "latitude": str(location['latitude']),
         "longitude": str(location['longitude']),
         "current": "cloud_cover,precipitation,is_day",
@@ -29,7 +33,7 @@ def getCurrentWeatherForBatch(cities):
         "longitude": ",".join(str(city["longitude"]) for city in cities),
         "current": "cloud_cover,precipitation,is_day",
     }
-    response = requests.get(OPEN_METEO_URL, params=params, timeout=30)
+    response = requests.get(f"{OPEN_METEO_URL}/v1/forecast", params=params, timeout=30)
     response.raise_for_status()
     data = response.json()
     # Open-Meteo returns a dict for one location, a list for several
