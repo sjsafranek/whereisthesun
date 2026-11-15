@@ -1,25 +1,20 @@
+import logging
 import json
 import redis
 from redis.maint_notifications import MaintNotificationsConfig
 
-# Connect to a local Redis instance
-r = redis.Redis(
-	host='localhost', 
-	port=6379, 
-	db=0, 
-	decode_responses=True,
-	maint_notifications_config=MaintNotificationsConfig(enabled=False)
-)
+import cache_redis
+import cache_memory
 
-def set(key, value, expires=3600):
-	r.setex(f'sun:{key}', expires, json.dumps(value))  # Expires in 1 hour
 
-def _set(key, value, expires=3600):
-	r.setex(f'sun:{key}', expires, value)  # Expires in 1 hour
+def set(key, value, ttl_seconds=3600):
+    if cache_redis.isEnabled():
+        cache_redis.set(key, value, ttl_seconds=ttl_seconds)
+    cache_memory.set(key, value, ttl_seconds=ttl_seconds)
 
 
 def get(key):
-	item = r.get(f'sun:{key}')
-	if not item:
-		return None
-	return json.loads(item) 
+    if cache_redis.isEnabled():
+        return cache_redis.get(key)
+    return cache_memory.get(key)
+
