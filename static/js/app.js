@@ -52,6 +52,11 @@ class App {
         this.map.on('locationfound', (event) => self._onLocationFound(event) )
                 .on('locationerror', console.log);
     
+        // Location lookups on click events
+        this.map.on('contextmenu', (event) => {
+            self._onLocationFound({latlng: event.latlng, accuracy: 2});
+        });
+
         // Get user location
         this.getUserLocation(true);
     }
