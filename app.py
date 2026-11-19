@@ -38,17 +38,17 @@ logging_config = LoggingConfig(
     loggers={
         "uvicorn": {
             "level": "DEBUG",
-            "handlers": ["console"],
+            "handlers": [],
             "propagate": True,
         },
         "uvicorn.error": {
             "level": "DEBUG",
-            "handlers": ["console"],
+            "handlers": [],
             "propagate": True,
         },
         "uvicorn.access": {
             "level": "DEBUG",
-            "handlers": ["console"],
+            "handlers": [],
             "propagate": True,
         },
     },
@@ -122,6 +122,6 @@ app = Litestar(
 #     print(route.path, route.methods)
 
 
-if __name__ == "__main__":
-    uvicorn.run(app)
+# if __name__ == "__main__":
+#     uvicorn.run(app)
 
