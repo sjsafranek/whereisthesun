@@ -57,15 +57,15 @@ You can run the application using either the Flask development server or a produ
 **For development:**
 
 ```bash
-flask run --host=0.0.0.0 --port=5001
+py -3.15 -m uvicorn app:app --host 127.0.0.1 --port 8000 --workers 2
 ```
 
 Navigate to `http://127.0.0.1:5001` in your web browser. The app will ask for your location to find the nearest sunny spot.
 
-**For production (with Gunicorn):**
+**For production (with Uvicorn):**
 
 ```bash
-gunicorn --workers 4 --bind 127.0.0.1:5001 app:app
+uvicorn app:app --host 127.0.0.1 --port 8000 --workers 2
 ```
 
 ### Command-Line Interface (CLI)

@@ -1,89 +1,127 @@
-import re
-import time
-import logging
-from logging.config import dictConfig
+from pathlib import Path
+# import logging
+import uvicorn
+import traceback
+from litestar import Litestar
+from litestar import get
+from litestar import Request
+from litestar import Response
+from litestar.response import Template
+from litestar.template.config import TemplateConfig
+from litestar.contrib.jinja import JinjaTemplateEngine
+from litestar.logging import LoggingConfig
+from litestar.middleware.logging import LoggingMiddlewareConfig
+from litestar.status_codes import HTTP_204_NO_CONTENT
+from litestar.status_codes import HTTP_500_INTERNAL_SERVER_ERROR
+from litestar.static_files import create_static_files_router
 
-from flask import Flask
-from flask import jsonify
-from flask import request
-from flask import render_template
-from flask import render_template_string
-# from werkzeug import serving
-from flask import g
-
-from api_v1 import v1
-import api_helpers
+from api_v1 import ApiV1
+from models import ApiResponse
 
 
 
-app = Flask(__name__, template_folder='templates', static_url_path='/static')
-# app.config['TEMPLATES_AUTO_RELOAD'] = True
-# app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s [%(levelname)s] [%(process)d] %(filename)s %(funcName)s:%(lineno)d %(message)s'
+# )
 
-###########
-# LOGGING #
-###########
 
-# Configure logging BEFORE creating the Flask app instance
-dictConfig({
-    'version': 1,
-    'formatters': {
-        'default': {
-            # 'format': '%(asctime)s [%(levelname)s] [%(threadName)s] %(filename)s %(funcName)s:%(lineno)d %(message)s',
-            'format': '%(asctime)s [%(levelname)s] [%(process)d] %(filename)s %(funcName)s:%(lineno)d %(message)s',
+logging_config = LoggingConfig(
+    # root={"level": "DEBUG", "handlers": ["queue_listener"]},
+    root={"level": "DEBUG", "handlers": ["console"]},
+    formatters={
+        "standard": {
+            "format": '%(asctime)s [%(levelname)s] [%(process)d] %(filename)s %(funcName)s:%(lineno)d %(message)s',
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         }
     },
-    'handlers': {
-        "console": {
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stdout",
-            "formatter": "default",
+    loggers={
+        "uvicorn": {
+            "level": "DEBUG",
+            "handlers": [],
+            "propagate": True,
         },
-        'wsgi': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://flask.logging.wsgi_errors_stream',
-            'formatter': 'default'
-        }
-        # 'file': {
-        #     'class': 'logging.FileHandler',
-        #     'filename': 'app.log',
-        #     'formatter': 'default'
-        # }
+        "uvicorn.error": {
+            "level": "DEBUG",
+            "handlers": [],
+            "propagate": True,
+        },
+        "uvicorn.access": {
+            "level": "DEBUG",
+            "handlers": [],
+            "propagate": True,
+        },
     },
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['console']
-    }
-})
-
-# Mute the Werkzeug request logger
-logging.getLogger('werkzeug').disabled = True
+    log_exceptions="always",
+)
 
 
+logging_middleware = LoggingMiddlewareConfig(
+    request_log_fields=("method", "path", "query"),
+    response_log_fields=("status_code",),
+)
 
-@app.before_request
-def before_request():
-    # Store the start time in Flask's global 'g' object per request
-    g.start_time = time.time()
-    app.logger.info(f"IN  {request.remote_addr} {request.method} {request.path} - {request.content_length or 0}B")
 
-@app.after_request
-def after_request(response):
-    # Calculate total duration of the request
-    duration = time.time() - g.start_time
+def internal_server_error_handler(request: Request, exc: Exception) -> Response:
+    tb_str = traceback.format_exc()
     
-    # Log HTTP method, URL path, response status, and duration
-    app.logger.info(f"OUT {request.remote_addr} {request.method} {request.path} [{response.status_code}] {duration:.4f}s - {response.content_length}B")
-    return response
+    # Print to console or send to your logging service
+    print(tb_str)
+    
+    return Response(
+        content={
+            "status": "error",
+            "error": {
+                "code": 500,
+                "message": "Internal Server Error",
+                "details": tb_str.splitlines(),  # Remove this line in production
+            }
+        },
+        status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+    )
 
 
-# Add API endpoints
-app.register_blueprint(v1, url_prefix='/api/v1')
+@get(
+    "/.well-known/appspecific/com.chrome.devtools.json",
+    status_code=HTTP_204_NO_CONTENT,
+    include_in_schema=False,
+)
+async def chrome_devtools_well_known() -> None:
+    return None
 
-# Add views
-@app.route('/', methods=['GET'])
-@app.route('/home', methods=['GET'])
-@app.route('/index', methods=['GET'])
-def index():
-    return render_template('index.html')
+
+@get("/")
+async def index() -> Template:
+    return Template(template_name="index.html")
+
+
+app = Litestar(
+    route_handlers=[
+        chrome_devtools_well_known,
+        index, 
+        ApiV1,
+        create_static_files_router(
+            path="/static",          # URL prefix to access files
+            directories=["static"],  # Local folder(s) relative to working directory
+        ),
+    ],
+    template_config=TemplateConfig(
+        directory=Path("templates"),
+        engine=JinjaTemplateEngine,
+    ),
+    exception_handlers={
+        HTTP_500_INTERNAL_SERVER_ERROR: internal_server_error_handler,
+    },
+    middleware=[logging_middleware.middleware],
+    logging_config=logging_config
+    # debug=True
+)
+
+
+# for route in app.routes:
+#     print(route.path, route.methods)
+
+
+# if __name__ == "__main__":
+#     uvicorn.run(app)
 

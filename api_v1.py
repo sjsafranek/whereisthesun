@@ -1,36 +1,55 @@
-from flask import jsonify
-from flask import request
-from flask import Blueprint
-from flask import current_app
+# from typing import Annotated
+from dataclasses import dataclass
+from litestar import post
+from litestar import Controller
+from litestar import Response
+# from litestar.params import Body
+from litestar.status_codes import HTTP_200_OK
+from litestar.status_codes import HTTP_400_BAD_REQUEST
 
-import api_helpers
 from whereisthesun import find_closest_sunny_cities
+from models import ApiRequest
+from models import ApiResponse
 
 
-v1 = Blueprint('v1', __name__)
+def makeMissingParameterResponse(parameter_name) -> ApiResponse:
+    api_response = ApiResponse()
+    api_response.status = "error"
+    api_response.error = ApiResponseError()
+    api_response.error.code = 404
+    api_response.error.message = f"Missing Parameter: '{parameter_name}'"
+    return api_response
 
 
-@v1.route('/sun', methods=['POST'])
-def find_the_sun():
-    api_request = request.json
+class ApiV1(Controller):
+    path = "/api/v1"
 
-    # Required parameters
-    params = api_request.get('params')
-    if not params:
-        return jsonify(api_helpers.buildMissingParameterResponse('params')), 404
-    
-    latitude = params.get('latitude')
-    if not latitude:
-        return jsonify(api_helpers.buildMissingParameterResponse('params.latitude')), 404
-    
-    longitude = params.get('longitude')
-    if not longitude:
-        return jsonify(api_helpers.buildMissingParameterResponse('params.longitude')), 404
+    @post("/sun")
+    async def find_the_sun(self, data: ApiRequest) -> Response[ApiResponse]:
+    # async def find_the_sun(self, data: Annotated[ApiRequest, Body()]) -> ApiResponse:
 
-    # Find cities
-    current_app.logger.info(params)
-    cities = find_closest_sunny_cities(latitude, longitude, **params)
+        latitude = data.params.get('latitude')
+        if not latitude:
+            # return makeMissingParameterResponse("latitude")
+            return Response(
+                content= makeMissingParameterResponse("latitude"),
+                status_code=HTTP_400_BAD_REQUEST,
+            )
 
-    # Format and return results
-    return jsonify(api_helpers.buildSuccessResponse(cities=cities)), 200
+        longitude = data.params.get('longitude')
+        if not longitude:
+            # return makeMissingParameterResponse("longitude")
+            return Response(
+                content= makeMissingParameterResponse("longitude"),
+                status_code=HTTP_400_BAD_REQUEST,
+            )
+
+        api_response = ApiResponse()
+        cities = find_closest_sunny_cities(latitude, longitude, **data.params)
+        api_response.data['cities'] = cities
+        # return api_response
+        return Response(
+            content=api_response,
+            status_code=HTTP_200_OK,
+        )
 

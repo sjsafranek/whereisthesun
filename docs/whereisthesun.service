@@ -1,0 +1,24 @@
+[Unit]
+Description=Litestar ASGI Application
+After=network.target
+
+[Service]
+# Run under a dedicated, non-root user
+User=www-data
+Group=www-data
+
+# Path to your project directory
+WorkingDirectory=/opt/my_litestar_app
+
+# Optional: Load environment variables from a file
+EnvironmentFile=/opt/my_litestar_app/.env
+
+# Execute the ASGI server directly from your virtual environment
+ExecStart=/opt/my_litestar_app/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8000 --workers 4
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
