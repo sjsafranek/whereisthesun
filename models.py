@@ -9,15 +9,16 @@ class ApiRequest:
 
 
 @dataclass
+class ApiResponseError:
+    code: int
+    message: str
+    details: str | None = None
+
+
+@dataclass
 class ApiResponse:
     status: str = 'ok'
     data: dict = field(default_factory=dict)
     error: ApiResponseError | None = None
 
-
-@dataclass
-class ApiResponseError:
-    code: int
-    message: str
-    details: str | None = None
 
