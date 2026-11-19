@@ -1,5 +1,3 @@
-import logging
-import json
 import redis
 from redis.maint_notifications import MaintNotificationsConfig
 
