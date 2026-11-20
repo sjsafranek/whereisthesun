@@ -1,8 +1,13 @@
+import logger
+
 import redis
 from redis.maint_notifications import MaintNotificationsConfig
 
 import cache_redis
 import cache_memory
+
+
+logger.info(f'Redis enabled ${cache_redis.isEnabled()}')
 
 
 def set(key, value, ttl_seconds=3600):
