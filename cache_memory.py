@@ -7,7 +7,8 @@ MEMORY = {}
 
 def _clean():
     now = time.monotonic()
-    for key in MEMORY.keys():
+    keys = MEMORY.keys()
+    for key in keys:
         value, expiration = MEMORY[key]
         if now > expiration:
             print(f'del {key}')
