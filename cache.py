@@ -1,4 +1,4 @@
-import logger
+import logging
 
 import redis
 from redis.maint_notifications import MaintNotificationsConfig
@@ -7,6 +7,7 @@ import cache_redis
 import cache_memory
 
 
+logger = logging.getLogger(__name__)
 logger.info(f'Redis enabled ${cache_redis.isEnabled()}')
 
 
