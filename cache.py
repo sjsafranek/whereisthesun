@@ -13,6 +13,7 @@ logging.info(f'Redis enabled ${cache_redis.isEnabled()}')
 def set(key, value, ttl_seconds=3600):
     if cache_redis.isEnabled():
         cache_redis.set(key, value, ttl_seconds=ttl_seconds)
+        return
     cache_memory.set(key, value, ttl_seconds=ttl_seconds)
 
 
