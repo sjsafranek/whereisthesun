@@ -11,10 +11,12 @@ def isEnabled():
 
 OPEN_WEATHER_MAP_URL = "https://api.openweathermap.org"
 
+session = requests.Session()
+
 
 def getCurrentWeather(location): 
     logging.debug(f"Fetching weather from OpenWeatherMap for Location({location['latitude']},{location['longitude']})")
-    response = requests.get(f"{OPEN_WEATHER_MAP_URL}/data/2.5/weather", 
+    response = session.get(f"{OPEN_WEATHER_MAP_URL}/data/2.5/weather", 
                             params={
                                 'lat': location['latitude'],
                                 'lon': location['longitude']   ,
