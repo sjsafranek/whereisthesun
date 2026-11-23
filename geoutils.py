@@ -8,6 +8,7 @@ from astral.sun import elevation
 from astral import LocationInfo
 from astral.sun import sun
 
+from cache import time_cache
 
 
 def haversine_km(lat1, lon1, lat2, lon2):
@@ -16,7 +17,7 @@ def haversine_km(lat1, lon1, lat2, lon2):
     return 6371 * 2 * asin(sqrt(a))
 
 
-
+@time_cache(1800)   # cache for 30 minutes
 def is_daytime(lat, lon, timezone, verbose=False):
     """
     Returns True if it is currently daytime at the given lat/long, 

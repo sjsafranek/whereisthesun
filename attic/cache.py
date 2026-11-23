@@ -1,6 +1,5 @@
-import os
-import functools
 import time
+import functools
 
 
 def time_cache(max_age, maxsize=128, typed=False):
